@@ -2,13 +2,20 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Copy root package.json if needed
 COPY package*.json ./
+
+# Copy frontend package.json separately
+COPY frontend/package*.json ./frontend/
+
+# Install root deps if any
 RUN npm ci
 
-# Copy source code
+# Install frontend deps
+RUN npm ci --prefix frontend
+
+# Copy all source code
 COPY . ./
 
-# Install next globally (optional) and build
-RUN npm install -g next
+# Build frontend
 RUN npm run build --prefix frontend
