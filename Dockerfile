@@ -1,67 +1,39 @@
-<<<<<<< HEAD
-# ---------- BUILD STAGE ----------
-=======
-<<<<<<< HEAD
->>>>>>> 190e317 (fix:next)
+# Base image
 FROM node:18-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
+# Copy package.json and lock files
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 
+# Install root deps if any
 RUN npm ci
+
+# Install frontend deps
 RUN npm ci --prefix frontend
 
-COPY . .
+# Copy source code
+COPY . ./
 
+# Build frontend
 RUN npm run build --prefix frontend
 
-
-# ---------- RUN STAGE ----------
-FROM node:18-alpine AS runner
+# Production image
+FROM node:18-alpine
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Copy built frontend
+COPY --from=builder /app/frontend/.next ./.next
+COPY --from=builder /app/frontend/package*.json ./
 
-# Only copy required things from builder
-COPY --from=builder /app/frontend ./frontend
-COPY --from=builder /app/package*.json ./
+# Install production deps only
+RUN npm ci --production
 
-RUN npm ci --omit=dev --prefix frontend
+# Expose port 4300
+EXPOSE 4300
 
-EXPOSE 3000
-<<<<<<< HEAD
-
-CMD ["npm", "run", "start", "--prefix", "frontend"]
-=======
-CMD ["npm", "run", "start"]
-=======
-FROM node:18-alpine AS builder
-WORKDIR /app
-
-# Install dependencies
-COPY package*.json ./
-RUN npm ci
-
-# Copy source and build
-COPY . ./
-RUN npm run build
-
-FROM node:18-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-
-# Copy production files
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/ ./
-
-EXPOSE 3000
-CMD ["npm", "run", "start"]
->>>>>>> f1dcdce (fix:next)
->>>>>>> 190e317 (fix:next)
+# Start app
+CMD ["npm", "start", "--prefix", "."]
