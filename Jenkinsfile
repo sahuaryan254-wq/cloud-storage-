@@ -3,7 +3,9 @@ pipeline {
 
     environment {
         GIT_CREDS = 'github-token'
-        DOCKER_CREDS = 'dockerhub'
+
+        DOCKER_USERNAME = credentials('dockerhub-username')
+        DOCKER_PASSWORD = credentials('dockerhub-password')
 
         SERVER_IMAGE = 'arya51090/myapp-server'
         FRONTEND_IMAGE = 'arya51090/myapp-frontend'
@@ -26,37 +28,36 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                script {
-                    sh "docker build -t $SERVER_IMAGE:latest ./server"
-                    sh "docker build -t $FRONTEND_IMAGE:latest ./frontend"
-                }
+                sh '''
+                docker build -t $SERVER_IMAGE:latest ./server
+                docker build -t $FRONTEND_IMAGE:latest ./frontend
+                '''
             }
         }
 
         stage('Docker Login') {
             steps {
-                script {
-                    docker.withRegistry('', DOCKER_CREDS) {
-                        echo "DockerHub login successful"
-                    }
-                }
+                sh '''
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                '''
             }
         }
 
         stage('Push Images to DockerHub') {
             steps {
-                script {
-                    docker.withRegistry('', DOCKER_CREDS) {
-                        sh "docker push $SERVER_IMAGE:latest"
-                        sh "docker push $FRONTEND_IMAGE:latest"
-                    }
-                }
+                sh '''
+                docker push $SERVER_IMAGE:latest
+                docker push $FRONTEND_IMAGE:latest
+                '''
             }
         }
 
         stage('Deploy using Docker Compose') {
             steps {
-                sh 'docker-compose up -d --build'
+                sh '''
+                docker-compose down || true
+                docker-compose up -d --build
+                '''
             }
         }
     }
