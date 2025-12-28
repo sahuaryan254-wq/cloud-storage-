@@ -7,7 +7,7 @@ pipeline {
         DOCKER_USERNAME = credentials('dockerhub-username')
         DOCKER_PASSWORD = credentials('dockerhub-password')
 
-        SERVER_IMAGE = 'arya51090/myapp-server'
+        SERVER_IMAGE   = 'arya51090/myapp-server'
         FRONTEND_IMAGE = 'arya51090/myapp-frontend'
     }
 
@@ -52,11 +52,12 @@ pipeline {
             }
         }
 
-        stage('Deploy using Docker Compose') {
+        stage('Deploy (LIVE on Local Server)') {
             steps {
                 sh '''
                 docker-compose down || true
-                docker-compose up -d --build
+                docker-compose pull
+                docker-compose up -d
                 '''
             }
         }
@@ -64,7 +65,9 @@ pipeline {
 
     post {
         always {
-            sh 'docker ps'
+            script {
+                sh 'docker ps'
+            }
         }
     }
 }
