@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'new_agent' }
+    agent any
 
     environment {
         GIT_CREDS = 'github-token'
