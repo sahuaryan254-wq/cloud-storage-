@@ -1,6 +1,14 @@
 pipeline {
     agent { label 'new_agent' }
 
+    environment {
+        DOCKER_USERNAME = credentials('dockerhub-username')
+        DOCKER_PASSWORD = credentials('dockerhub-password')
+
+        SERVER_IMAGE   = 'arya51090/myapp-server'
+        FRONTEND_IMAGE = 'arya51090/myapp-frontend'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -9,18 +17,28 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Images') {
             steps {
                 sh '''
-                echo "Build running"
+                docker build -t $SERVER_IMAGE:latest ./server
+                docker build -t $FRONTEND_IMAGE:latest ./frontend
                 '''
             }
         }
 
-        stage('Test') {
+        stage('Docker Login') {
             steps {
                 sh '''
-                echo "Test running"
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                '''
+            }
+        }
+
+        stage('Push Images') {
+            steps {
+                sh '''
+                docker push $SERVER_IMAGE:latest
+                docker push $FRONTEND_IMAGE:latest
                 '''
             }
         }
@@ -28,15 +46,17 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                echo "Deploy running"
+                docker-compose down || true
+                docker-compose pull
+                docker-compose up -d
                 '''
             }
         }
     }
 
     post {
-        always {
-            echo "Pipeline finished"
+        success {
+            echo "✅ Deployment successful"
         }
-    }
-}
+        failure {
+            echo "❌ Deployment
