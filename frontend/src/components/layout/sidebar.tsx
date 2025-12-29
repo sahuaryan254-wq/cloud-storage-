@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FileStack, LogOut, Upload, UserRound } from "lucide-react";
 import { Button } from "../ui/button";
@@ -21,8 +22,13 @@ export const Sidebar = ({ onUploadClick }: { onUploadClick: () => void }) => {
   return (
     <aside className="hidden w-64 flex-col border-r border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950 lg:flex">
       <div className="mb-10 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
-          <Upload size={22} />
+        <div className="relative h-11 w-11 overflow-hidden rounded-xl">
+          <Image
+            src="/logo.png"
+            alt="Cloud Uploader"
+            fill
+            className="object-cover"
+          />
         </div>
         <div>
           <p className="text-sm text-zinc-500">Cloud Uploader</p>

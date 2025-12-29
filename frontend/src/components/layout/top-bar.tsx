@@ -53,7 +53,11 @@ export const TopBar = ({
             onChange={(event) => onFilterChange(event.target.value)}
           >
             {filterOptions.map((option) => (
-              <option key={option.value} value={option.value}>
+              <option
+                key={option.value}
+                value={option.value}
+                className="bg-white text-zinc-900 dark:bg-zinc-900 dark:text-white"
+              >
                 {option.label}
               </option>
             ))}

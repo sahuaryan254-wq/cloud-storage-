@@ -81,6 +81,16 @@ export const AuthAPI = {
       method: "POST",
       body: payload,
     }),
+  forgotPassword: (payload: { email: string }) =>
+    apiFetch<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: payload,
+    }),
+  resetPassword: (payload: { email: string; otp: string; password: string }) =>
+    apiFetch<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: payload,
+    }),
 };
 
 export const FileAPI = {
