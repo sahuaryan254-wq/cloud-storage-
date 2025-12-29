@@ -52,7 +52,7 @@ pipeline {
             }
         }
 
-        stage('Deploy (LIVE on Local Server)') {
+        stage('Deploy (Local Server)') {
             steps {
                 sh '''
                 docker-compose down || true
@@ -65,9 +65,15 @@ pipeline {
 
     post {
         always {
-            script {
-                sh 'docker ps'
-            }
+            echo "Pipeline completed on new_agent ✅"
+        }
+
+        success {
+            echo "Build + Deploy successful 🚀"
+        }
+
+        failure {
+            echo "Build failed ❌ — check logs"
         }
     }
 }
