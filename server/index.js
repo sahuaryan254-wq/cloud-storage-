@@ -7,25 +7,63 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Health check
+/* =========================
+   Health Check
+========================= */
 app.get("/health", (req, res) => {
-  res.status(200).json({ ok: true, time: Date.now() });
+  res.status(200).json({
+    ok: true,
+    service: "cloud-storage-backend",
+    time: new Date().toISOString(),
+  });
 });
 
-// Simple in-memory user store (for mock only)
-const users = [];
+/* =========================
+   GitHub Webhook Endpoint
+========================= */
+app.post("/github-webhook", (req, res) => {
+  const event = req.headers["x-github-event"];
 
-// Signup route (mock)
-app.post("/api/auth/signup", (req, res) => {
-  const { fullName, email, password } = req.body || {};
-  if (!email || !password || !fullName) {
-    return res.status(400).json({ success: false, message: "Missing required fields" });
+  console.log("✅ GitHub Webhook Received");
+  console.log("Event:", event);
+
+  if (event === "push") {
+    const repo = req.body?.repository?.full_name;
+    const branch = req.body?.ref;
+    const commitMsg = req.body?.head_commit?.message;
+
+    console.log("Repo:", repo);
+    console.log("Branch:", branch);
+    console.log("Commit:", commitMsg);
+
+    // 👉 yahin future me Jenkins trigger kar sakte ho
   }
 
-  // check already exists
+  return res.status(200).json({ success: true, message: "Webhook received" });
+});
+
+/* =========================
+   Mock Auth (temporary)
+========================= */
+const users = [];
+
+// Signup
+app.post("/api/auth/signup", (req, res) => {
+  const { fullName, email, password } = req.body || {};
+
+  if (!fullName || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields",
+    });
+  }
+
   const exists = users.find((u) => u.email === email.toLowerCase());
   if (exists) {
-    return res.status(409).json({ success: false, message: "User already exists" });
+    return res.status(409).json({
+      success: false,
+      message: "User already exists",
+    });
   }
 
   const user = {
@@ -33,21 +71,49 @@ app.post("/api/auth/signup", (req, res) => {
     fullName: String(fullName).trim(),
     email: String(email).toLowerCase(),
   };
+
   users.push(user);
 
-  // Return a fake token and user
-  return res.status(201).json({ success: true, data: { token: "mock-token", user } });
+  return res.status(201).json({
+    success: true,
+    data: {
+      token: "mock-token",
+      user,
+    },
+  });
 });
 
-// Login route (mock)
+// Login
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body || {};
-  if (!email || !password) return res.status(400).json({ success: false, message: "Missing fields" });
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing fields",
+    });
+  }
+
   const user = users.find((u) => u.email === String(email).toLowerCase());
-  if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
-  return res.status(200).json({ success: true, data: { token: "mock-token", user } });
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid credentials",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      token: "mock-token",
+      user,
+    },
+  });
 });
 
+/* =========================
+   Server Start
+========================= */
 app.listen(PORT, () => {
-  console.log(`Mock server listening on http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
