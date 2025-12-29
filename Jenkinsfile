@@ -2,8 +2,9 @@ pipeline {
     agent { label 'new_agent' }
 
     environment {
-        SERVER_IMAGE   = 'arya51090/myapp-server'
-        FRONTEND_IMAGE = 'arya51090/myapp-frontend'
+        SERVER_IMAGE   = "arya51090/myapp-server"
+        FRONTEND_IMAGE = "arya51090/myapp-frontend"
+        TAG = "latest"
     }
 
     stages {
@@ -14,11 +15,26 @@ pipeline {
             }
         }
 
+        stage('Docker Info (Debug)') {
+            steps {
+                sh '''
+                docker --version
+                docker info
+                '''
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 sh '''
-                docker build -t $SERVER_IMAGE:latest ./server
-                docker build -t $FRONTEND_IMAGE:latest ./frontend
+                echo "👉 Building Server Image"
+                docker build -t ${SERVER_IMAGE}:${TAG} ./server
+
+                echo "👉 Building Frontend Image"
+                docker build -t ${FRONTEND_IMAGE}:${TAG} ./frontend
+
+                echo "✅ Images built successfully"
+                docker images | grep arya51090 || true
                 '''
             }
         }
@@ -34,8 +50,12 @@ pipeline {
                 ]) {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push $SERVER_IMAGE:latest
-                    docker push $FRONTEND_IMAGE:latest
+
+                    echo "👉 Pushing server image"
+                    docker push ${SERVER_IMAGE}:${TAG}
+
+                    echo "👉 Pushing frontend image"
+                    docker push ${FRONTEND_IMAGE}:${TAG}
                     '''
                 }
             }
@@ -44,9 +64,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
+                echo "🚀 Deploying using docker-compose"
+
                 docker-compose down || true
                 docker-compose pull
-                docker-compose up -d
+                docker-compose up -d --remove-orphans
+
+                docker ps
                 '''
             }
         }
@@ -54,10 +78,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment successful"
+            echo "✅ CI/CD Pipeline completed successfully"
         }
         failure {
-            echo "❌ Deployment failed"
+            echo "❌ Pipeline failed — check above logs"
         }
     }
 }
