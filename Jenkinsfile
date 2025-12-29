@@ -1,13 +1,13 @@
 pipeline {
-    agent any
+    agent { label 'new_agent' }
 
     stages {
-        stage('Test Agent') {
+        stage('Check Executor') {
             steps {
                 sh '''
-                echo "Agent working"
+                echo "Agent OK"
+                hostname
                 whoami
-                pwd
                 '''
             }
         }
