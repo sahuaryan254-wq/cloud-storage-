@@ -4,8 +4,25 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+/* =========================
+   Middlewares
+========================= */
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ngrok browser warning bypass (optional but useful)
+app.use((req, res, next) => {
+  res.setHeader("ngrok-skip-browser-warning", "true");
+  next();
+});
+
+/* =========================
+   Root Test Route
+========================= */
+app.get("/", (req, res) => {
+  res.send("Backend running 🚀");
+});
 
 /* =========================
    Health Check
@@ -27,6 +44,12 @@ app.post("/github-webhook", (req, res) => {
   console.log("✅ GitHub Webhook Received");
   console.log("Event:", event);
 
+  // ping test from GitHub
+  if (event === "ping") {
+    return res.status(200).send("pong");
+  }
+
+  // push event
   if (event === "push") {
     const repo = req.body?.repository?.full_name;
     const branch = req.body?.ref;
@@ -36,10 +59,13 @@ app.post("/github-webhook", (req, res) => {
     console.log("Branch:", branch);
     console.log("Commit:", commitMsg);
 
-    // 👉 yahin future me Jenkins trigger kar sakte ho
+    // 👉 yahin baad me Jenkins trigger hoga
   }
 
-  return res.status(200).json({ success: true, message: "Webhook received" });
+  return res.status(200).json({
+    success: true,
+    message: "Webhook received successfully",
+  });
 });
 
 /* =========================
@@ -112,7 +138,7 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 /* =========================
-   Server Start
+   Start Server
 ========================= */
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
