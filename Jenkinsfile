@@ -8,23 +8,9 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                withCredentials([
-                    string(
-                        credentialsId: 'github-token',
-                        variable: 'GITHUB_TOKEN'
-                    )
-                ]) {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/sahuaryan254-wq/cloud-storage-.git',
-                            credentialsId: 'github-token'
-                        ]]
-                    ])
-                }
+                checkout scm
             }
         }
 
@@ -72,9 +58,6 @@ pipeline {
         }
         failure {
             echo "❌ Deployment failed"
-        }
-        always {
-            echo "Pipeline finished"
         }
     }
 }
