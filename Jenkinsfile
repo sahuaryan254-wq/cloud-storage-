@@ -11,7 +11,7 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 checkout scm
             }
@@ -29,3 +29,40 @@ pipeline {
         stage('Docker Login') {
             steps {
                 sh '''
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                '''
+            }
+        }
+
+        stage('Push Images') {
+            steps {
+                sh '''
+                docker push $SERVER_IMAGE:latest
+                docker push $FRONTEND_IMAGE:latest
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker-compose down || true
+                docker-compose pull
+                docker-compose up -d
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful"
+        }
+        failure {
+            echo "❌ Deployment failed"
+        }
+        always {
+            echo "Pipeline finished"
+        }
+    }
+}
