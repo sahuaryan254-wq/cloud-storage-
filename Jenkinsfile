@@ -2,14 +2,41 @@ pipeline {
     agent { label 'new_agent' }
 
     stages {
-        stage('Check Executor') {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
             steps {
                 sh '''
-                echo "Agent OK"
-                hostname
-                whoami
+                echo "Build running"
                 '''
             }
+        }
+
+        stage('Test') {
+            steps {
+                sh '''
+                echo "Test running"
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                echo "Deploy running"
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline finished"
         }
     }
 }
