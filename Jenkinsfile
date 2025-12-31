@@ -66,9 +66,9 @@ pipeline {
                 sh '''
                 echo "🚀 Deploying using docker-compose"
 
-                docker-compose down || true
-                docker-compose pull
-                docker-compose up -d --remove-orphans
+                docker compose down || true
+                docker compose pull
+                docker compose up -d --remove-orphans
 
                 docker ps
                 '''
