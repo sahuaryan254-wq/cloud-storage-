@@ -15,25 +15,28 @@ pipeline {
             }
         }
 
-        stage('Docker Info (Debug)') {
+        stage('Docker Debug Info') {
             steps {
                 sh '''
+                echo "🐳 Docker Version:"
                 docker --version
-                docker info
+
+                echo "📦 Docker Info:"
+                docker info || true
                 '''
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Images') {
             steps {
                 sh '''
-                echo "👉 Building Server Image"
+                echo "🔨 Building backend image"
                 docker build -t ${SERVER_IMAGE}:${TAG} ./server
 
-                echo "👉 Building Frontend Image"
+                echo "🔨 Building frontend image"
                 docker build -t ${FRONTEND_IMAGE}:${TAG} ./frontend
 
-                echo "✅ Images built successfully"
+                echo "✅ Images built:"
                 docker images | grep arya51090 || true
                 '''
             }
@@ -51,25 +54,25 @@ pipeline {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                    echo "👉 Pushing server image"
                     docker push ${SERVER_IMAGE}:${TAG}
-
-                    echo "👉 Pushing frontend image"
                     docker push ${FRONTEND_IMAGE}:${TAG}
                     '''
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy (Auto Restart Enabled)') {
             steps {
                 sh '''
-                echo "🚀 Deploying using docker-compose"
+                echo "🚀 Deploying containers..."
 
                 docker compose down || true
+
                 docker compose pull
+
                 docker compose up -d --remove-orphans
 
+                echo "📦 Running containers:"
                 docker ps
                 '''
             }
@@ -78,10 +81,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI/CD Pipeline completed successfully"
+            echo "✅ CI/CD completed successfully — App deployed & auto-restart enabled"
         }
         failure {
-            echo "❌ Pipeline failed — check above logs"
+            echo "❌ Pipeline failed — check logs above"
         }
     }
 }
